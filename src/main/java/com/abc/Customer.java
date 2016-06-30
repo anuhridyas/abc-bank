@@ -8,10 +8,19 @@ import static java.lang.Math.abs;
 public class Customer {
     private String name;
     private List<Account> accounts;
+    //private final String custId="CUST"+System.nanoTime();
 
     public Customer(String name) {
         this.name = name;
         this.accounts = new ArrayList<Account>();
+    }
+
+    /*public String getCustId() {
+        return custId;
+    }*/
+
+    public List<Account> getAccounts() {
+        return accounts;
     }
 
     public String getName() {
@@ -28,51 +37,43 @@ public class Customer {
     }
 
     public double totalInterestEarned() {
-        double total = 0;
+        double total = 0.0;
         for (Account a : accounts)
             total += a.interestEarned();
         return total;
     }
 
     public String getStatement() {
-        String statement = null;
+        String statement = "";
         statement = "Statement for " + name + "\n";
         double total = 0.0;
         for (Account a : accounts) {
-            statement += "\n" + statementForAccount(a) + "\n";
+            statement += "\n" + a.statement() + "\n";
             total += a.sumTransactions();
         }
-        statement += "\nTotal In All Accounts " + toDollars(total);
+        statement += "\nTotal In All Accounts " + Util.toDollars(total);
         return statement;
     }
 
-    private String statementForAccount(Account a) {
-        String s = "";
-
-       //Translate to pretty account type
-        switch(a.getAccountType()){
-            case Account.CHECKING:
-                s += "Checking Account\n";
-                break;
-            case Account.SAVINGS:
-                s += "Savings Account\n";
-                break;
-            case Account.MAXI_SAVINGS:
-                s += "Maxi Savings Account\n";
-                break;
+    public boolean isMyOwnAccount(Account account) {
+        if (accounts.contains(account)) {
+            return true;
         }
-
-        //Now total up all the transactions
-        double total = 0.0;
-        for (Transaction t : a.transactions) {
-            s += "  " + (t.amount < 0 ? "withdrawal" : "deposit") + " " + toDollars(t.amount) + "\n";
-            total += t.amount;
-        }
-        s += "Total " + toDollars(total);
-        return s;
+        return false;
     }
 
-    private String toDollars(double d){
-        return String.format("$%,.2f", abs(d));
+    public void transfer(Account sourceAccount, Account destAccount, double amount) throws IllegalArgumentException {
+        if (amount <=0) {
+            throw new IllegalArgumentException("amount must be greater than zero");
+        } else if (sourceAccount == destAccount) {
+            throw new IllegalArgumentException("Cannot transfer between the same accounts");
+        }
+
+        try{
+            sourceAccount.withdraw(amount);
+            destAccount.deposit(amount);
+        } catch(Exception e) {
+            throw new IllegalArgumentException("error withdrawing");
+        }
     }
 }
